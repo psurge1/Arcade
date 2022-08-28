@@ -26,7 +26,10 @@ MapM = {
   x = 0,
   y = 0,
   map = {},
-  p = {}
+  p = {},
+  safety = "",
+  danger = "",
+  basesquare = ""
 }
 
 function MapM:new(o, x, y)
@@ -37,6 +40,9 @@ function MapM:new(o, x, y)
   self.y = y
   self.map = {}
   self.p = {1, 1}
+  self.safety = ""
+  self.danger = ""
+  self.basesquare = ""
   return o
 end
 
@@ -57,6 +63,39 @@ function MapM:getY()
   return self.y
 end
 
+function MapM:GetSafety()
+  return self.safety
+end
+
+function MapM:SetSafety(s)
+  self.safety = s
+end
+
+function MapM:GetDanger()
+  return self.danger
+end
+
+function MapM:SetDanger(s)
+  self.danger = s
+end
+
+function MapM:GetBaseSquare()
+  return self.basesquare
+end
+
+function MapM:SetBaseSquare(s)
+  self.basesquare = s
+end
+
+function MapM:GetLocation()
+  return self.p
+end
+
+function MapM:SetLocation(px, py)
+  self.p[1] = px
+  self.p[2] = py
+end
+
 function MapM:Genmap(chances)
   if not CheckC(chances) then
     return {}
@@ -68,6 +107,7 @@ function MapM:Genmap(chances)
       self.map[i][k] = Chanced(chances)
     end
   end
+  self.map[self.p[2]][self.p[1]] = self.basesquare
 end
 
 function MapM:Dispmap()
@@ -91,6 +131,10 @@ function MapM:Play()
       print()
     end
     if self.p[2] == 1 then
+      self:Win()
+      break
+    elseif self.map[self.p[2]][self.p[1]] == self.danger then
+      self:Loss()
       break
     end
     self:Dispmap()
@@ -98,38 +142,46 @@ function MapM:Play()
   end
 end
 
-function MapM:IsValidX(n)
-  return n > 0 and n <= self.x
+function MapM:IsValid(n, m)
+  if n >= 1 and n <= self.x and m >= 1 and m <= self.y then
+    if self.map[m][n] == self.safety or self.map[m][n] == self.danger then
+      return true
+    end
+  end
+  return false
 end
 
-function MapM:IsValidY(n)
-  return n > 0 and n <= self.y
+function MapM:jump(n)
+  local temp = self.p[2] - 2
+  if self:IsValid(self.p[1], temp) then
+    self.p[2] = temp
+  end
 end
 
 function MapM:up(n)
   local temp = self.p[2] - 1
-  if self:IsValidY(temp) then
+  if self:IsValid(self.p[1], temp) then
     self.p[2] = temp
   end
 end
 
 function MapM:down(n)
   local temp = self.p[2] + 1
-  if self:IsValidY(temp) then
+  if self:IsValid(self.p[1], temp) then
     self.p[2] = temp
   end
 end
 
 function MapM:left(n)
   local temp = self.p[1] - 1
-  if self:IsValidX(temp) then
+  if self:IsValid(temp, self.p[2]) then
     self.p[1] = temp
   end
 end
 
 function MapM:right(n)
   local temp = self.p[1] + 1
-  if self:IsValidX(temp) then
+  if self:IsValid(temp, self.p[2]) then
     self.p[1] = temp
   end
 end
@@ -143,7 +195,17 @@ function MapM:Move(d, n)
     self:left(n)
   elseif d == "r" then
     self:right(n)
+  elseif d == "j" then
+    self:jump(n)
   end
+end
+
+function MapM:Win()
+  print("won")
+end
+
+function MapM:Loss()
+  print("lost")
 end
 
 return {MapM = MapM}
